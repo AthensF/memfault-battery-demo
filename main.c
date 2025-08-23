@@ -6,7 +6,7 @@
 // Battery simulation parameters (FAST DEMO MODE)
 #define BATTERY_MAX_VOLTAGE_MV    4200  // 4.2V fully charged
 #define BATTERY_MIN_VOLTAGE_MV    3000  // 3.0V empty
-#define BATTERY_DRAIN_RATE_MV     50    // 50mV per second (25x faster!)
+#define BATTERY_DRAIN_RATE_MV     170   // 170mV per second (much faster!)
 #define BATTERY_LOW_THRESHOLD     20    // 20% warning
 #define BATTERY_CRITICAL_THRESHOLD 10   // 10% critical
 #define BATTERY_EMPTY_THRESHOLD   0     // 0% empty
@@ -68,16 +68,29 @@ void check_battery_status(void) {
     memfault_metrics_heartbeat_set_unsigned(MEMFAULT_METRICS_KEY(battery_percent), battery_percent);
     
     // Trigger events at critical thresholds
-    if (battery_percent <= BATTERY_EMPTY_THRESHOLD) {
-        MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryEmpty, "Battery empty - shutting down!");
-        uart_send_string("CRITICAL: Battery empty!");
-        // In real system, would trigger shutdown
-        while(1) { __WFI(); } // Simulate shutdown
-    }
-    else if (battery_percent <= BATTERY_CRITICAL_THRESHOLD && !g_critical_battery_warned) {
-        MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryCritical, "Battery critically low!");
-        uart_send_string("WARNING: Battery critically low!");
+    if (battery_percent <= BATTERY_CRITICAL_THRESHOLD && !g_critical_battery_warned) {
+        uart_send_string("CRITICAL: Battery critically low (10%)!\r\n");
         g_critical_battery_warned = true;
+        
+        // Log critical battery event to Memfault
+        MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryLow, "Battery critical: %d%%", battery_percent);
+        
+        // Export chunks for GDB extraction
+        memfault_data_export_dump_chunks();
+    }
+    
+    // Check for empty battery (0%)
+    if (battery_percent <= BATTERY_EMPTY_THRESHOLD) {
+        uart_send_string("SHUTDOWN: Battery empty!\r\n");
+        
+        // Log shutdown event to Memfault
+        MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryLow, "Battery empty, shutting down");
+        
+        // Final chunk export before shutdown
+        memfault_data_export_dump_chunks();
+        
+        // Simulate device shutdown
+        while(1) { __WFI(); } // Simulate shutdown
     }
     else if (battery_percent <= BATTERY_LOW_THRESHOLD && !g_low_battery_warned) {
         MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryLow, "Battery low warning");
@@ -105,6 +118,9 @@ int main(void) {
         
         // Send heartbeat to Memfault periodically
         memfault_metrics_heartbeat_debug_trigger();
+        
+        // Export chunks for GDB extraction
+        memfault_data_export_dump_chunks();
         
         delay_ms(2000); // 2 second intervals
     }

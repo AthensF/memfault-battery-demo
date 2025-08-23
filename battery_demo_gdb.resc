@@ -1,0 +1,38 @@
+# Renode script for STM32F4 Battery Demo with GDB server
+# Usage: renode -e "include @battery_demo_gdb.resc"
+
+# Create STM32F4 Discovery board
+mach create "stm32f4_discovery"
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+
+# Load our firmware (once built)
+sysbus LoadELF @build/battery_demo.elf
+
+# Setup UART for logging output
+showAnalyzer sysbus.usart2
+
+# Setup logging
+logLevel 3
+
+# Enable GDB server on port 3333
+machine StartGdbServer 3333
+
+# Start the simulation
+start
+
+# Optional: Set up some monitoring
+echo "Battery demo started with GDB server!"
+echo "GDB server listening on port 3333"
+echo "Connect with: arm-none-eabi-gdb build/battery_demo.elf -ex 'target remote :3333'"
+echo ""
+echo "Watch the UART analyzer for battery status updates"
+echo "Expected timeline:"
+echo "  0-19s: Normal operation (100% → 21%)"
+echo "  19s: Low battery warning (20%)"
+echo "  22s: Critical battery warning (10%)"
+echo "  24s: Battery empty, device shutdown"
+echo ""
+echo "To extract Memfault chunks via GDB:"
+echo "  1. Connect GDB to target remote :3333"
+echo "  2. source memfault_gdb.py"
+echo "  3. memfault install_chunk_handler -pk YOUR_PROJECT_KEY"
