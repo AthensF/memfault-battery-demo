@@ -1,3 +1,6 @@
 [submodule "libs/CMSIS_5"]
 	path = libs/CMSIS_5
 	url = https://github.com/ARM-software/CMSIS_5
+[submodule "memfault/memfault-firmware-sdk"]
+	path = memfault/memfault-firmware-sdk
+	url = https://github.com/memfault/memfault-firmware-sdk.git

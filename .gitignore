@@ -12,3 +12,6 @@ Debug/
 Release/
 *.launch
 RemoteSystemsTempFiles/
+
+# Environment files (keep secrets out of git)
+.env

@@ -1,0 +1,27 @@
+# Renode script for STM32F4 Battery Demo
+# Usage: renode -e "include @battery_demo.resc"
+
+# Create STM32F4 Discovery board
+mach create "stm32f4_discovery"
+machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
+
+# Load our firmware (once built)
+sysbus LoadELF @build/battery_demo.elf
+
+# Setup UART for logging output
+showAnalyzer sysbus.usart2
+
+# Setup logging
+logLevel 3
+
+# Start the simulation
+start
+
+# Optional: Set up some monitoring
+echo "Battery demo started!"
+echo "Watch the UART analyzer for battery status updates"
+echo "Expected timeline:"
+echo "  0-19s: Normal operation (100% → 21%)"
+echo "  19s: Low battery warning (20%)"
+echo "  22s: Critical battery warning (10%)"
+echo "  24s: Battery empty, device shutdown"
