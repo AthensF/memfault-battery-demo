@@ -1,0 +1,17 @@
+# Docker Compose for Memfault GDB debugging
+
+services:
+  memfault-gdb:
+    build: .
+    container_name: memfault-gdb-debug
+    env_file:
+      - .env
+    volumes:
+      - .:/work
+      - ../third_party/memfault:/work/memfault
+    ports:
+      - "3333:3333"  # GDB server port (if needed)
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    command: bash

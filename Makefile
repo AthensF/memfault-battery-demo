@@ -10,7 +10,7 @@ SIZE = arm-none-eabi-size
 # MCU settings
 MCU = cortex-m4
 FPU = -mfpu=fpv4-sp-d16
-FLOAT-ABI = -mfloat-abi=hard
+FLOAT-ABI = -mfloat-abi=soft
 
 # Compiler flags
 CFLAGS = -mcpu=$(MCU) -mthumb $(FPU) $(FLOAT-ABI)
@@ -20,6 +20,8 @@ CFLAGS += $(C_DEFS)
 CFLAGS += -Wall -Wextra -Og -g3 -gdwarf-2
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -MMD -MP
+# Disable problematic FPU optimizations for Renode compatibility
+CFLAGS += -fno-builtin
 
 # Linker flags
 LDFLAGS = -mcpu=$(MCU) -mthumb $(FPU) $(FLOAT-ABI)
@@ -56,6 +58,7 @@ MEMFAULT_SOURCES += $(wildcard $(MEMFAULT_SDK_ROOT)/components/metrics/src/*.c)
 
 # Source files
 C_SOURCES = main.c
+C_SOURCES += memfault_cli.c
 C_SOURCES += system_stm32f4xx.c
 C_SOURCES += $(MEMFAULT_SOURCES)
 

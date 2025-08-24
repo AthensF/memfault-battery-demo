@@ -2,6 +2,11 @@
 #include "memfault/components.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+// Forward declaration to avoid implicit declaration warning
+void uart_send_string(const char* str);
 
 // Battery simulation parameters (FAST DEMO MODE)
 #define BATTERY_MAX_VOLTAGE_MV    4200  // 4.2V fully charged
@@ -16,14 +21,16 @@ static volatile uint32_t g_tick_count = 0;
 static uint32_t g_battery_voltage_mv = BATTERY_MAX_VOLTAGE_MV;
 static bool g_low_battery_warned = false;
 static bool g_critical_battery_warned = false;
+static bool g_connected = true; // simulated connectivity state
 
 // Simple delay function
 void delay_ms(uint32_t ms) {
     uint32_t start = g_tick_count;
     while ((g_tick_count - start) < ms) {
-        __WFI(); // Wait for interrupt
+        // Empty loop to avoid register access issues
     }
 }
+
 
 // SysTick interrupt handler
 void SysTick_Handler(void) {
@@ -89,8 +96,10 @@ void check_battery_status(void) {
         // Final chunk export before shutdown
         memfault_data_export_dump_chunks();
         
-        // Simulate device shutdown
-        while(1) { __WFI(); } // Simulate shutdown
+        // Simulate device shutdown - use simple infinite loop
+        while(1) { 
+            // Empty loop to avoid any register access issues
+        }
     }
     else if (battery_percent <= BATTERY_LOW_THRESHOLD && !g_low_battery_warned) {
         MEMFAULT_TRACE_EVENT_WITH_LOG(BatteryLow, "Battery low warning");
@@ -113,16 +122,16 @@ int main(void) {
     uart_send_string("Starting with full battery (4.2V, 100%)");
     
     while (1) {
-        // Check battery status every 2 seconds (faster for demo)
+        // Check battery status every 1 second
         check_battery_status();
-        
+
         // Send heartbeat to Memfault periodically
         memfault_metrics_heartbeat_debug_trigger();
-        
+
         // Export chunks for GDB extraction
         memfault_data_export_dump_chunks();
-        
-        delay_ms(2000); // 2 second intervals
+
+        delay_ms(1000); // 1 second intervals
     }
     
     return 0;

@@ -1,6 +1,9 @@
 # Renode script for STM32F4 Battery Demo
 # Usage: renode -e "include @battery_demo.resc"
 
+# Kill any existing machines first
+Clear
+
 # Create STM32F4 Discovery board
 mach create "stm32f4_discovery"
 machine LoadPlatformDescription @platforms/boards/stm32f4_discovery-kit.repl
@@ -13,6 +16,9 @@ showAnalyzer sysbus.usart2
 
 # Setup logging
 logLevel 3
+
+# Start GDB server on port 3334 (avoiding conflicts)
+machine StartGdbServer 3334
 
 # Start the simulation
 start
